@@ -1,0 +1,12 @@
+<org.jenkinsci.plugin.gitea.GiteaSCMSource>
+    <id>org.jenkinsci.plugin.gitea.GiteaSCMNavigator::https://gitea.local::jenkinsci::gitea-scm-filter-aged-refs</id>
+    <serverUrl>https://gitea.local</serverUrl>
+    <repoOwner>jenkinsci</repoOwner>
+    <repository>gitea-scm-filter-aged-refs</repository>
+    <credentialsId>gitea-credentials</credentialsId>
+    <traits>
+        <org.jenkinsci.plugins.scm_filter.GiteaAgedRefsTrait plugin="gitea-scm-filter-aged-refs@${project.version}">
+            <retentionDays>30</retentionDays>
+        </org.jenkinsci.plugins.scm_filter.GiteaAgedRefsTrait>
+    </traits>
+</org.jenkinsci.plugin.gitea.GiteaSCMSource>

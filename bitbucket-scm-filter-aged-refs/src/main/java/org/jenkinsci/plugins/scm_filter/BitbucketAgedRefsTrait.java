@@ -1,6 +1,11 @@
 package org.jenkinsci.plugins.scm_filter;
 
-import com.cloudbees.jenkins.plugins.bitbucket.*;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSource;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceContext;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceRequest;
+import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
+import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
+import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -84,8 +89,11 @@ public class BitbucketAgedRefsTrait extends AgedRefsTrait {
                         return pullTS < super.getAcceptableDateTimeThreshold();
                     }
                 }
+            } else if (scmHead instanceof BitbucketTagSCMHead) {
+                long tagTS = ((BitbucketTagSCMHead) scmHead).getTimestamp();
+                return tagTS < super.getAcceptableDateTimeThreshold();
             }
-            return super.isExcluded(scmSourceRequest, scmHead);
+            return false;
         }
     }
 }

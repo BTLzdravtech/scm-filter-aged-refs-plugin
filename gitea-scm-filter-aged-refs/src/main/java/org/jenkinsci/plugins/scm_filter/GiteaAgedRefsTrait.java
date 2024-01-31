@@ -9,20 +9,20 @@ import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.impl.trait.Selection;
 import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.github_branch_source.BranchSCMHead;
-import org.jenkinsci.plugins.github_branch_source.GitHubSCMSource;
-import org.jenkinsci.plugins.github_branch_source.GitHubSCMSourceContext;
-import org.jenkinsci.plugins.github_branch_source.GitHubSCMSourceRequest;
-import org.jenkinsci.plugins.github_branch_source.GitHubTagSCMHead;
-import org.jenkinsci.plugins.github_branch_source.PullRequestSCMHead;
-import org.kohsuke.github.GHBranch;
-import org.kohsuke.github.GHPullRequest;
+import org.jenkinsci.plugin.gitea.BranchSCMHead;
+import org.jenkinsci.plugin.gitea.GiteaSCMSource;
+import org.jenkinsci.plugin.gitea.GiteaSCMSourceContext;
+import org.jenkinsci.plugin.gitea.GiteaSCMSourceRequest;
+import org.jenkinsci.plugin.gitea.PullRequestSCMHead;
+import org.jenkinsci.plugin.gitea.TagSCMHead;
+import org.jenkinsci.plugin.gitea.client.api.GiteaBranch;
+import org.jenkinsci.plugin.gitea.client.api.GiteaPullRequest;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * @author witokondoria
+ * @author Sicco
  */
-public class GitHubAgedRefsTrait extends AgedRefsTrait {
+public class GiteaAgedRefsTrait extends AgedRefsTrait {
 
     /**
      * Constructor for stapler.
@@ -30,7 +30,7 @@ public class GitHubAgedRefsTrait extends AgedRefsTrait {
      * @param retentionDays retention period in days
      */
     @DataBoundConstructor
-    public GitHubAgedRefsTrait(String retentionDays) {
+    public GiteaAgedRefsTrait(String retentionDays) {
         super(retentionDays);
     }
 
@@ -46,18 +46,18 @@ public class GitHubAgedRefsTrait extends AgedRefsTrait {
      */
     @Extension
     @Selection
-    @Symbol("gitHubAgedRefsTrait")
+    @Symbol("giteaAgedRefsTrait")
     @SuppressWarnings("unused") // instantiated by Jenkins
     public static class DescriptorImpl extends AgedRefsDescriptorImpl {
 
         @Override
         public Class<? extends SCMSourceContext> getContextClass() {
-            return GitHubSCMSourceContext.class;
+            return GiteaSCMSourceContext.class;
         }
 
         @Override
         public Class<? extends SCMSource> getSourceClass() {
-            return GitHubSCMSource.class;
+            return GiteaSCMSource.class;
         }
     }
 
@@ -72,32 +72,28 @@ public class GitHubAgedRefsTrait extends AgedRefsTrait {
 
         @Override
         public boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
-                throws IOException {
+          throws IOException {
             if (scmHead instanceof BranchSCMHead) {
-                Iterable<GHBranch> branches = ((GitHubSCMSourceRequest) scmSourceRequest).getBranches();
-                for (GHBranch branch : branches) {
-                    long branchTS = branch.getOwner()
-                            .getCommit(branch.getSHA1())
-                            .getCommitDate()
-                            .getTime();
+                Iterable<GiteaBranch> branches = ((GiteaSCMSourceRequest) scmSourceRequest).getBranches();
+                for (GiteaBranch branch : branches) {
+                    long branchTS = branch.getCommit()
+                      .getTimestamp()
+                      .getTime();
                     if (branch.getName().equals(scmHead.getName())) {
                         return branchTS < super.getAcceptableDateTimeThreshold();
                     }
                 }
             } else if (scmHead instanceof PullRequestSCMHead) {
-                Iterable<GHPullRequest> pulls = ((GitHubSCMSourceRequest) scmSourceRequest).getPullRequests();
-                for (GHPullRequest pull : pulls) {
+                Iterable<GiteaPullRequest> pulls = ((GiteaSCMSourceRequest) scmSourceRequest).getPullRequests();
+                for (GiteaPullRequest pull : pulls) {
                     if (("PR-" + pull.getNumber()).equals(scmHead.getName())) {
-                        long pullTS = pull.getHead()
-                                .getCommit()
-                                .getCommitShortInfo()
-                                .getCommitDate()
-                                .getTime();
+                        long pullTS = pull.getUpdatedAt()
+                          .getTime();
                         return pullTS < super.getAcceptableDateTimeThreshold();
                     }
                 }
-            } else if (scmHead instanceof GitHubTagSCMHead) {
-                long tagTS = ((GitHubTagSCMHead) scmHead).getTimestamp();
+            } else if (scmHead instanceof TagSCMHead) {
+                long tagTS = ((TagSCMHead) scmHead).getTimestamp();
                 return tagTS < super.getAcceptableDateTimeThreshold();
             }
             return false;

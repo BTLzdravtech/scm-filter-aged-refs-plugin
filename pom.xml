@@ -53,6 +53,7 @@
     <gitHubRepo>jenkinsci/scm-filter-aged-refs-plugin</gitHubRepo>
     <jenkins.version>2.361.4</jenkins.version>
     <bitbucket-branch-source.version>2.9.1</bitbucket-branch-source.version>
+    <gitea-plugin.version>1.4.5</gitea-plugin.version>
     <spotless.check.skip>false</spotless.check.skip>
   </properties>
 

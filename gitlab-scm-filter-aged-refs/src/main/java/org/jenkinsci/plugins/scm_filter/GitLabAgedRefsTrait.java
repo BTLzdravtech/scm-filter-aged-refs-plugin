@@ -2,7 +2,12 @@ package org.jenkinsci.plugins.scm_filter;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import io.jenkins.plugins.gitlabbranchsource.*;
+import io.jenkins.plugins.gitlabbranchsource.BranchSCMHead;
+import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSource;
+import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSourceContext;
+import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSourceRequest;
+import io.jenkins.plugins.gitlabbranchsource.GitLabTagSCMHead;
+import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMHead;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,8 +93,11 @@ public class GitLabAgedRefsTrait extends AgedRefsTrait {
                         return isMrExcluded(gitLabSCMSourceRequest, mr);
                     }
                 }
+            } else if (scmHead instanceof GitLabTagSCMHead) {
+                long tagTS = ((GitLabTagSCMHead) scmHead).getTimestamp();
+                return tagTS < super.getAcceptableDateTimeThreshold();
             }
-            return super.isExcluded(scmSourceRequest, scmHead);
+            return false;
         }
 
         private boolean isMrExcluded(GitLabSCMSourceRequest gitLabSCMSourceRequest, MergeRequest mr) {

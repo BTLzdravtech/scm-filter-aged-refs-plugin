@@ -4,7 +4,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.util.FormValidation;
 import java.io.IOException;
 import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.mixin.TagSCMHead;
 import jenkins.scm.api.trait.SCMHeadFilter;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
@@ -84,13 +83,7 @@ public abstract class AgedRefsTrait extends SCMSourceTrait {
         }
 
         @Override
-        public boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
-                throws IOException {
-            if (scmHead instanceof TagSCMHead) {
-                long tagTS = ((TagSCMHead) scmHead).getTimestamp();
-                return tagTS < getAcceptableDateTimeThreshold();
-            }
-            return false;
-        }
+        public abstract boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
+          throws IOException;
     }
 }

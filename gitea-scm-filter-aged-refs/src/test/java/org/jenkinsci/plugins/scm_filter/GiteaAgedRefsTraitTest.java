@@ -1,27 +1,58 @@
 package org.jenkinsci.plugins.scm_filter;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
-import java.io.IOException;
-import java.io.InputStream;
 import jenkins.model.Jenkins;
+import jenkins.scm.api.SCMSource;
+import org.hamcrest.Matchers;
 import org.jenkinsci.plugin.gitea.GiteaSCMSource;
-import org.junit.jupiter.api.Test;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+import org.jvnet.hudson.test.JenkinsRule;
 
-class GiteaAgedRefsTraitTest {
+public class GiteaAgedRefsTraitTest {
 
-    private GiteaSCMSource load(String file) throws IOException {
-        try (InputStream res = getClass().getResourceAsStream(getClass().getSimpleName() + "/" + file)) {
-            return (GiteaSCMSource) Jenkins.XSTREAM2.fromXML(res);
-        }
+    @ClassRule
+    public static final JenkinsRule j = new JenkinsRule();
+
+    @Rule
+    public TestName currentTestName = new TestName();
+
+    private SCMSource load() {
+        return load(currentTestName.getMethodName());
+    }
+
+    private SCMSource load(String dataSet) {
+        return (GiteaSCMSource)
+          Jenkins.XSTREAM2.fromXML(getClass().getResource(getClass().getSimpleName() + "/" + dataSet + ".xml"));
     }
 
     @Test
-    void restoreData() throws IOException {
-        GiteaSCMSource instance = load("exclude_thirty_days.xml");
-        assertThat(instance.getTraits())
-          .singleElement()
-          .isInstanceOf(GiteaAgedRefsTrait.class)
-          .hasFieldOrPropertyWithValue("retentionDays", 30);
+    public void plugin_defaults() {
+        GiteaSCMSource instance = (GiteaSCMSource) load();
+        assertThat(
+          instance.getTraits(),
+          contains(Matchers.allOf(
+            instanceOf(GiteaAgedRefsTrait.class),
+            hasProperty("branchRetentionDays", is(0)),
+            hasProperty("prRetentionDays", is(0)),
+            hasProperty("tagRetentionDays", is(0)),
+            hasProperty("branchExcludeFilter", is("")))));
+    }
+
+    @Test
+    public void plugin_enabled() {
+        GiteaSCMSource instance = (GiteaSCMSource) load();
+        assertThat(
+          instance.getTraits(),
+          contains(Matchers.allOf(
+            instanceOf(GiteaAgedRefsTrait.class),
+            hasProperty("branchRetentionDays", is(30)),
+            hasProperty("prRetentionDays", is(40)),
+            hasProperty("tagRetentionDays", is(50)),
+            hasProperty("branchExcludeFilter", is("main hotfix-*")))));
     }
 }

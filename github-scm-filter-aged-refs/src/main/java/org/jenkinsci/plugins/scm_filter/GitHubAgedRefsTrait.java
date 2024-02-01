@@ -73,7 +73,7 @@ public class GitHubAgedRefsTrait extends AgedRefsTrait {
         @Override
         public boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
                 throws IOException {
-            if (scmHead instanceof BranchSCMHead && super.getAcceptableBranchDateTimeThreshold() > 0) {
+            if (scmHead instanceof BranchSCMHead) {
                 if (scmHead.getName().matches(super.getBranchExcludePattern())) {
                     return false;
                 }
@@ -88,7 +88,7 @@ public class GitHubAgedRefsTrait extends AgedRefsTrait {
                         return branchTS < super.getAcceptableBranchDateTimeThreshold();
                     }
                 }
-            } else if (scmHead instanceof PullRequestSCMHead && super.getAcceptableBranchDateTimeThreshold() > 0) {
+            } else if (scmHead instanceof PullRequestSCMHead) {
                 Iterable<GHPullRequest> pulls = ((GitHubSCMSourceRequest) scmSourceRequest).getPullRequests();
                 for (GHPullRequest pull : pulls) {
                     if (("PR-" + pull.getNumber()).equals(scmHead.getName())) {
@@ -100,7 +100,7 @@ public class GitHubAgedRefsTrait extends AgedRefsTrait {
                         return pullTS < super.getAcceptablePRDateTimeThreshold();
                     }
                 }
-            } else if (scmHead instanceof GitHubTagSCMHead && super.getAcceptableBranchDateTimeThreshold() > 0) {
+            } else if (scmHead instanceof GitHubTagSCMHead) {
                 long tagTS = ((GitHubTagSCMHead) scmHead).getTimestamp();
                 return tagTS < super.getAcceptableTagDateTimeThreshold();
             }

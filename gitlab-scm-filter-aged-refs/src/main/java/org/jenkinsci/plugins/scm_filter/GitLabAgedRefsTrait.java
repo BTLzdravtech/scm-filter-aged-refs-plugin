@@ -79,7 +79,7 @@ public class GitLabAgedRefsTrait extends AgedRefsTrait {
         @Override
         public boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
                 throws IOException {
-            if (scmHead instanceof BranchSCMHead && super.getAcceptableBranchDateTimeThreshold() > 0) {
+            if (scmHead instanceof BranchSCMHead) {
                 if (scmHead.getName().matches(super.getBranchExcludePattern())) {
                     return false;
                 }
@@ -91,7 +91,7 @@ public class GitLabAgedRefsTrait extends AgedRefsTrait {
                         return branchTS < getAcceptableBranchDateTimeThreshold();
                     }
                 }
-            } else if (scmHead instanceof MergeRequestSCMHead && super.getAcceptableBranchDateTimeThreshold() > 0) {
+            } else if (scmHead instanceof MergeRequestSCMHead) {
                 MergeRequestSCMHead mrHead = (MergeRequestSCMHead) scmHead;
                 GitLabSCMSourceRequest gitLabSCMSourceRequest = (GitLabSCMSourceRequest) scmSourceRequest;
                 Iterable<MergeRequest> mrs = gitLabSCMSourceRequest.getMergeRequests();
@@ -100,7 +100,7 @@ public class GitLabAgedRefsTrait extends AgedRefsTrait {
                         return isMrExcluded(gitLabSCMSourceRequest, mr);
                     }
                 }
-            } else if (scmHead instanceof GitLabTagSCMHead && super.getAcceptableBranchDateTimeThreshold() > 0) {
+            } else if (scmHead instanceof GitLabTagSCMHead) {
                 long tagTS = ((GitLabTagSCMHead) scmHead).getTimestamp();
                 return tagTS < super.getAcceptableTagDateTimeThreshold();
             }

@@ -18,27 +18,26 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.scm_filter.utils.BitbucketFilterRefUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+/**
+ * @author witokondoria
+ */
 public class BitbucketAgedRefsTrait extends AgedRefsTrait {
 
     /**
      * Constructor for stapler.
      *
-     * @param branchRetentionDays retention period in days for branches
-     * @param prRetentionDays     retention period in days for pull requests
-     * @param tagRetentionDays    retention period in days for tags
-     * @param branchExcludeFilter space-separated list of branch name patterns to
-     *                            ignore. For example: release main hotfix-*
+     * @param retentionDays retention period in days
      */
     @DataBoundConstructor
-    public BitbucketAgedRefsTrait(
-            String branchRetentionDays, String prRetentionDays, String tagRetentionDays, String branchExcludeFilter) {
-        super(branchRetentionDays, prRetentionDays, tagRetentionDays, branchExcludeFilter);
+    public BitbucketAgedRefsTrait(String retentionDays) {
+        super(retentionDays);
     }
 
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
-        context.withFilter(new ExcludeOldBranchesSCMHeadFilter(
-                branchRetentionDays, prRetentionDays, tagRetentionDays, branchExcludeFilter));
+        if (retentionDays > 0) {
+            context.withFilter(new ExcludeOldBranchesSCMHeadFilter(retentionDays));
+        }
     }
 
     /**
@@ -62,19 +61,17 @@ public class BitbucketAgedRefsTrait extends AgedRefsTrait {
     }
 
     /**
-     * Filter that excludes references (branches, pull requests, tags) according to
-     * their last commit modification date and the defined branchRetentionDays.
+     * Filter that excludes references (branches, pull requests, tags) according to their last commit modification date and the defined retentionDays.
      */
     private static class ExcludeOldBranchesSCMHeadFilter extends ExcludeBranchesSCMHeadFilter {
 
-        ExcludeOldBranchesSCMHeadFilter(
-                int branchRetentionDays, int prRetentionDays, int tagRetentionDays, String branchExcludeFilter) {
-            super(branchRetentionDays, prRetentionDays, tagRetentionDays, branchExcludeFilter);
+        ExcludeOldBranchesSCMHeadFilter(int retentionDays) {
+            super(retentionDays);
         }
 
         @Override
         public boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
-                throws IOException {
+                throws IOException, InterruptedException {
             if (scmHead instanceof BranchSCMHead) {
                 return BitbucketFilterRefUtils.isBranchExcluded(
                         (BitbucketSCMSourceRequest) scmSourceRequest,

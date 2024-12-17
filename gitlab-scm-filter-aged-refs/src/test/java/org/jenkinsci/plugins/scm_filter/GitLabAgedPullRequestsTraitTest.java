@@ -2,26 +2,27 @@ package org.jenkinsci.plugins.scm_filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
+import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSource;
 import java.io.IOException;
 import java.io.InputStream;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugin.gitea.GiteaSCMSource;
 import org.junit.jupiter.api.Test;
 
-class GiteaAgedRefsTraitTest {
+class GitLabAgedPullRequestsTraitTest {
 
-    private GiteaSCMSource load(String file) throws IOException {
+    private GitLabSCMSource load(String file) throws IOException {
         try (InputStream res = getClass().getResourceAsStream(getClass().getSimpleName() + "/" + file)) {
-            return (GiteaSCMSource) Jenkins.XSTREAM2.fromXML(res);
+            return (GitLabSCMSource) Jenkins.XSTREAM2.fromXML(res);
         }
     }
 
     @Test
     void restoreData() throws IOException {
-        GiteaSCMSource instance = load("exclude_thirty_days.xml");
+        GitLabSCMSource instance = load("exclude_pull_requests_thirty_days.xml");
         assertThat(instance.getTraits())
                 .singleElement()
-                .isInstanceOf(GiteaAgedRefsTrait.class)
+                .isInstanceOf(GitLabAgedPullRequestsTrait.class)
                 .hasFieldOrPropertyWithValue("retentionDays", 30);
     }
 }

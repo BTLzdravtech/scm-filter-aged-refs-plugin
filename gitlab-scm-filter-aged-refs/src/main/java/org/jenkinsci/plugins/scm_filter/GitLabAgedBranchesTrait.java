@@ -2,6 +2,10 @@ package org.jenkinsci.plugins.scm_filter;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import io.jenkins.plugins.gitlabbranchsource.BranchSCMHead;
+import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSource;
+import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSourceContext;
+import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSourceRequest;
 import java.io.IOException;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSource;
@@ -9,19 +13,12 @@ import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.impl.trait.Selection;
 import org.jenkinsci.Symbol;
-import org.jenkinsci.plugin.gitea.BranchSCMHead;
-import org.jenkinsci.plugin.gitea.GiteaSCMSource;
-import org.jenkinsci.plugin.gitea.GiteaSCMSourceContext;
-import org.jenkinsci.plugin.gitea.GiteaSCMSourceRequest;
-import org.jenkinsci.plugin.gitea.PullRequestSCMHead;
-import org.jenkinsci.plugin.gitea.TagSCMHead;
-import org.jenkinsci.plugins.scm_filter.utils.GiteaFilterRefUtils;
+import org.jenkinsci.plugins.scm_filter.enums.RefType;
+import org.jenkinsci.plugins.scm_filter.utils.GitLabFilterRefUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-/**
- * @author witokondoria
- */
-public class GiteaAgedRefsTrait extends AgedRefsTrait {
+public class GitLabAgedBranchesTrait extends AgedTypeRefsTrait {
+    private static final RefType REF_TYPE = RefType.BRANCH;
 
     /**
      * Constructor for stapler.
@@ -29,7 +26,7 @@ public class GiteaAgedRefsTrait extends AgedRefsTrait {
      * @param retentionDays retention period in days
      */
     @DataBoundConstructor
-    public GiteaAgedRefsTrait(String retentionDays) {
+    public GitLabAgedBranchesTrait(String retentionDays) {
         super(retentionDays);
     }
 
@@ -40,30 +37,39 @@ public class GiteaAgedRefsTrait extends AgedRefsTrait {
         }
     }
 
-    /**
-     * Our descriptor.
-     */
     @Extension
     @Selection
-    @Symbol("giteaAgedRefsTrait")
+    @Symbol("gitLabAgedBranchesTrait")
     @SuppressWarnings("unused") // instantiated by Jenkins
     public static class DescriptorImpl extends AgedRefsDescriptorImpl {
 
         @Override
         public Class<? extends SCMSourceContext> getContextClass() {
-            return GiteaSCMSourceContext.class;
+            return GitLabSCMSourceContext.class;
         }
 
         @Override
         public Class<? extends SCMSource> getSourceClass() {
-            return GiteaSCMSource.class;
+            return GitLabSCMSource.class;
+        }
+
+        @Override
+        @NonNull
+        public String getDisplayName() {
+            return "Filter branches by age";
+        }
+
+        @Override
+        @NonNull
+        public String getRefName() {
+            return REF_TYPE.getName();
         }
     }
 
     /**
-     * Filter that excludes references (branches, pull requests, tags) according to their last commit modification date and the defined retentionDays.
+     * Filter that excludes branches according to their last commit modification date and the defined retentionDays.
      */
-    private static class ExcludeOldBranchesSCMHeadFilter extends ExcludeBranchesSCMHeadFilter {
+    private static class ExcludeOldBranchesSCMHeadFilter extends ExcludeReferencesSCMHeadFilter {
 
         ExcludeOldBranchesSCMHeadFilter(int retentionDays) {
             super(retentionDays);
@@ -73,17 +79,10 @@ public class GiteaAgedRefsTrait extends AgedRefsTrait {
         public boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
                 throws IOException, InterruptedException {
             if (scmHead instanceof BranchSCMHead) {
-                return GiteaFilterRefUtils.isBranchExcluded(
-                        (GiteaSCMSourceRequest) scmSourceRequest,
+                return GitLabFilterRefUtils.isBranchExcluded(
+                        (GitLabSCMSourceRequest) scmSourceRequest,
                         (BranchSCMHead) scmHead,
                         getAcceptableDateTimeThreshold());
-            } else if (scmHead instanceof PullRequestSCMHead) {
-                return GiteaFilterRefUtils.isPullRequestExcluded(
-                        (GiteaSCMSourceRequest) scmSourceRequest,
-                        (PullRequestSCMHead) scmHead,
-                        getAcceptableDateTimeThreshold());
-            } else if (scmHead instanceof TagSCMHead) {
-                return GiteaFilterRefUtils.isTagExcluded((TagSCMHead) scmHead, getAcceptableDateTimeThreshold());
             }
             return false;
         }

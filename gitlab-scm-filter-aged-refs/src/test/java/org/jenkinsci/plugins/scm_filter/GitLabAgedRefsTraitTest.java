@@ -1,59 +1,28 @@
 package org.jenkinsci.plugins.scm_filter;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSource;
+import java.io.IOException;
+import java.io.InputStream;
 import jenkins.model.Jenkins;
-import jenkins.scm.api.SCMSource;
-import org.hamcrest.Matchers;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-import org.jvnet.hudson.test.JenkinsRule;
+import org.junit.jupiter.api.Test;
 
-public class GitLabAgedRefsTraitTest {
+class GitLabAgedRefsTraitTest {
 
-    @ClassRule
-    public static final JenkinsRule j = new JenkinsRule();
-
-    @Rule
-    public TestName currentTestName = new TestName();
-
-    private SCMSource load() {
-        return load(currentTestName.getMethodName());
-    }
-
-    private SCMSource load(String dataSet) {
-        return (GitLabSCMSource)
-          Jenkins.XSTREAM2.fromXML(getClass().getResource(getClass().getSimpleName() + "/" + dataSet + ".xml"));
+    private GitLabSCMSource load(String file) throws IOException {
+        try (InputStream res = getClass().getResourceAsStream(getClass().getSimpleName() + "/" + file)) {
+            return (GitLabSCMSource) Jenkins.XSTREAM2.fromXML(res);
+        }
     }
 
     @Test
-    public void plugin_defaults() {
-        GitLabSCMSource instance = (GitLabSCMSource) load();
-        assertThat(
-          instance.getTraits(),
-          contains(Matchers.allOf(
-            instanceOf(GitLabAgedRefsTrait.class),
-            hasProperty("branchRetentionDays", is(0)),
-            hasProperty("prRetentionDays", is(0)),
-            hasProperty("tagRetentionDays", is(0)),
-            hasProperty("branchExcludeFilter", is("")))));
-    }
-
-    @Test
-    public void plugin_enabled() {
-        GitLabSCMSource instance = (GitLabSCMSource) load();
-        assertThat(
-          instance.getTraits(),
-          contains(Matchers.allOf(
-            instanceOf(GitLabAgedRefsTrait.class),
-            hasProperty("branchRetentionDays", is(30)),
-            hasProperty("prRetentionDays", is(40)),
-            hasProperty("tagRetentionDays", is(50)),
-            hasProperty("branchExcludeFilter", is("main hotfix-*")))));
+    void restoreData() throws IOException {
+        GitLabSCMSource instance = load("exclude_thirty_days.xml");
+        assertThat(instance.getTraits())
+                .singleElement()
+                .isInstanceOf(GitLabAgedRefsTrait.class)
+                .hasFieldOrPropertyWithValue("retentionDays", 30);
     }
 }

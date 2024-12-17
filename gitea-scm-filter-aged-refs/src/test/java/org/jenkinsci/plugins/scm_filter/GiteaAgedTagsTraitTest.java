@@ -8,7 +8,7 @@ import jenkins.model.Jenkins;
 import org.jenkinsci.plugin.gitea.GiteaSCMSource;
 import org.junit.jupiter.api.Test;
 
-class GiteaAgedRefsTraitTest {
+class GiteaAgedTagsTraitTest {
 
     private GiteaSCMSource load(String file) throws IOException {
         try (InputStream res = getClass().getResourceAsStream(getClass().getSimpleName() + "/" + file)) {
@@ -18,10 +18,10 @@ class GiteaAgedRefsTraitTest {
 
     @Test
     void restoreData() throws IOException {
-        GiteaSCMSource instance = load("exclude_thirty_days.xml");
+        GiteaSCMSource instance = load("exclude_tags_thirty_days.xml");
         assertThat(instance.getTraits())
                 .singleElement()
-                .isInstanceOf(GiteaAgedRefsTrait.class)
+                .isInstanceOf(GiteaAgedTagsTrait.class)
                 .hasFieldOrPropertyWithValue("retentionDays", 30);
     }
 }

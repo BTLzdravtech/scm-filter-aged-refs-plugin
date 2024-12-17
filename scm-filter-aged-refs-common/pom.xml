@@ -11,7 +11,6 @@
   <artifactId>scm-filter-aged-refs-common</artifactId>
 
   <name>Aged References SCM Filter shared components</name>
-  <description>A single abstract class to refactor code</description>
 
   <dependencies>
     <dependency>

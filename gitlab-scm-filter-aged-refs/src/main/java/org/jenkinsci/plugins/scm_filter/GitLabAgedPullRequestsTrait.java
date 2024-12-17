@@ -2,27 +2,23 @@ package org.jenkinsci.plugins.scm_filter;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import io.jenkins.plugins.gitlabbranchsource.BranchSCMHead;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSource;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSourceContext;
 import io.jenkins.plugins.gitlabbranchsource.GitLabSCMSourceRequest;
-import io.jenkins.plugins.gitlabbranchsource.GitLabTagSCMHead;
 import io.jenkins.plugins.gitlabbranchsource.MergeRequestSCMHead;
 import java.io.IOException;
-
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.impl.trait.Selection;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.scm_filter.enums.RefType;
 import org.jenkinsci.plugins.scm_filter.utils.GitLabFilterRefUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-/**
- * @author witokondoria
- */
-public class GitLabAgedRefsTrait extends AgedRefsTrait {
+public class GitLabAgedPullRequestsTrait extends AgedTypeRefsTrait {
+    private static final RefType REF_TYPE = RefType.PULL_REQUEST;
 
     /**
      * Constructor for stapler.
@@ -30,23 +26,20 @@ public class GitLabAgedRefsTrait extends AgedRefsTrait {
      * @param retentionDays retention period in days
      */
     @DataBoundConstructor
-    public GitLabAgedRefsTrait(String retentionDays) {
+    public GitLabAgedPullRequestsTrait(String retentionDays) {
         super(retentionDays);
     }
 
     @Override
     protected void decorateContext(SCMSourceContext<?, ?> context) {
         if (retentionDays > 0) {
-            context.withFilter(new ExcludeOldBranchesSCMHeadFilter(retentionDays));
+            context.withFilter(new ExcludeOldPullRequestsSCMHeadFilter(retentionDays));
         }
     }
 
-    /**
-     * Our descriptor.
-     */
     @Extension
     @Selection
-    @Symbol("gitLabAgedRefsTrait")
+    @Symbol("gitLabAgedPullRequestsTrait")
     @SuppressWarnings("unused") // instantiated by Jenkins
     public static class DescriptorImpl extends AgedRefsDescriptorImpl {
 
@@ -59,32 +52,37 @@ public class GitLabAgedRefsTrait extends AgedRefsTrait {
         public Class<? extends SCMSource> getSourceClass() {
             return GitLabSCMSource.class;
         }
+
+        @Override
+        @NonNull
+        public String getDisplayName() {
+            return "Filter pull requests by age";
+        }
+
+        @Override
+        @NonNull
+        public String getRefName() {
+            return REF_TYPE.getName();
+        }
     }
 
     /**
-     * Filter that excludes references (branches, pull requests, tags) according to their last commit modification date and the defined retentionDays.
+     * Filter that excludes pull requests according to their last commit modification date and the defined retentionDays.
      */
-    private static class ExcludeOldBranchesSCMHeadFilter extends ExcludeBranchesSCMHeadFilter {
+    private static class ExcludeOldPullRequestsSCMHeadFilter extends ExcludeReferencesSCMHeadFilter {
 
-        ExcludeOldBranchesSCMHeadFilter(int retentionDays) {
+        ExcludeOldPullRequestsSCMHeadFilter(int retentionDays) {
             super(retentionDays);
         }
 
         @Override
         public boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
                 throws IOException, InterruptedException {
-            if (scmHead instanceof BranchSCMHead) {
-                return GitLabFilterRefUtils.isBranchExcluded(
-                        (GitLabSCMSourceRequest) scmSourceRequest,
-                        (BranchSCMHead) scmHead,
-                        getAcceptableDateTimeThreshold());
-            } else if (scmHead instanceof MergeRequestSCMHead) {
+            if (scmHead instanceof MergeRequestSCMHead) {
                 return GitLabFilterRefUtils.isPullRequestExcluded(
                         (GitLabSCMSourceRequest) scmSourceRequest,
                         (MergeRequestSCMHead) scmHead,
                         getAcceptableDateTimeThreshold());
-            } else if (scmHead instanceof GitLabTagSCMHead) {
-                return GitLabFilterRefUtils.isTagExcluded((GitLabTagSCMHead) scmHead, getAcceptableDateTimeThreshold());
             }
             return false;
         }

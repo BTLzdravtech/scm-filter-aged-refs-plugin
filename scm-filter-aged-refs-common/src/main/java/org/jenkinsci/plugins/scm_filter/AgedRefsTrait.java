@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.scm_filter;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.util.FormValidation;
 import java.io.IOException;
-import java.util.regex.Pattern;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.trait.SCMHeadFilter;
 import jenkins.scm.api.trait.SCMSourceContext;
@@ -18,46 +17,20 @@ import org.kohsuke.stapler.verb.POST;
 
 public abstract class AgedRefsTrait extends SCMSourceTrait {
 
-    final int branchRetentionDays;
-    final int prRetentionDays;
-    final int tagRetentionDays;
-    final String branchExcludeFilter;
+    final int retentionDays;
 
     /**
      * Constructor for stapler.
      *
-     * @param branchRetentionDays retention period in days for branches
-     * @param prRetentionDays     retention period in days for pull requests
-     * @param tagRetentionDays    retention period in days for tags
-     * @param branchExcludeFilter space-separated list of branch name patterns to
-     *                            ignore. For example: release main hotfix-*
+     * @param retentionDays retention period in days
      */
-    protected AgedRefsTrait(
-            String branchRetentionDays, String prRetentionDays, String tagRetentionDays, String branchExcludeFilter) {
-        this.branchRetentionDays = Integer.parseInt(branchRetentionDays);
-        this.prRetentionDays = Integer.parseInt(prRetentionDays);
-        this.tagRetentionDays = Integer.parseInt(tagRetentionDays);
-        this.branchExcludeFilter = branchExcludeFilter;
+    protected AgedRefsTrait(String retentionDays) {
+        this.retentionDays = Integer.parseInt(retentionDays);
     }
 
     @SuppressWarnings("unused") // used by Jelly EL
-    public int getBranchRetentionDays() {
-        return this.branchRetentionDays;
-    }
-
-    @SuppressWarnings("unused") // used by Jelly EL
-    public int getPrRetentionDays() {
-        return this.prRetentionDays;
-    }
-
-    @SuppressWarnings("unused") // used by Jelly EL
-    public int getTagRetentionDays() {
-        return this.tagRetentionDays;
-    }
-
-    @SuppressWarnings("unused") // used by Jelly EL
-    public String getBranchExcludeFilter() {
-        return this.branchExcludeFilter;
+    public int getRetentionDays() {
+        return this.retentionDays;
     }
 
     @Override
@@ -82,88 +55,23 @@ public abstract class AgedRefsTrait extends SCMSourceTrait {
     }
 
     /**
-     * Filter that excludes references (branches, pull requests, tags) according to
-     * their last commit modification date and the defined branchRetentionDays.
+     * Filter that excludes references (branches, pull requests, tags) according to their last commit modification date and the defined retentionDays.
      */
     public abstract static class ExcludeBranchesSCMHeadFilter extends SCMHeadFilter {
 
-        private final long acceptableBranchDateTimeThreshold;
-        private final long acceptablePRDateTimeThreshold;
-        private final long acceptableTagDateTimeThreshold;
-        private final String branchExcludePattern;
+        private final long acceptableDateTimeThreshold;
 
-        /**
-         * Returns the pattern corresponding to the branches containing wildcards.
-         *
-         * @param branches the names of branches to create a pattern for
-         * @return pattern corresponding to the branches containing wildcards
-         */
-        private String getPattern(String branches) {
-            if (branches.equals("")) {
-                return "";
-            }
-
-            StringBuilder quotedBranches = new StringBuilder();
-            for (String wildcard : branches.split(" ")) {
-                StringBuilder quotedBranch = new StringBuilder();
-                for (String branch : wildcard.split("(?=[*])|(?<=[*])")) {
-                    if (branch.equals("*")) {
-                        quotedBranch.append(".*");
-                    } else if (!branch.isEmpty()) {
-                        quotedBranch.append(Pattern.quote(branch));
-                    }
-                }
-                if (quotedBranches.length() > 0) {
-                    quotedBranches.append("|");
-                }
-                quotedBranches.append(quotedBranch);
-            }
-            return quotedBranches.toString();
-        }
-
-        protected ExcludeBranchesSCMHeadFilter(
-                int branchRetentionDays, int prRetentionDays, int tagRetentionDays, String branchExcludeFilter) {
-            this.branchExcludePattern = this.getPattern(branchExcludeFilter);
-
+        protected ExcludeBranchesSCMHeadFilter(int retentionDays) {
             long now = System.currentTimeMillis();
-
-            if (branchRetentionDays > 0) {
-                this.acceptableBranchDateTimeThreshold = now - (24L * 60 * 60 * 1000 * branchRetentionDays);
-            } else {
-                this.acceptableBranchDateTimeThreshold = 0;
-            }
-
-            if (prRetentionDays > 0) {
-                this.acceptablePRDateTimeThreshold = now - (24L * 60 * 60 * 1000 * prRetentionDays);
-            } else {
-                this.acceptablePRDateTimeThreshold = 0;
-            }
-
-            if (tagRetentionDays > 0) {
-                this.acceptableTagDateTimeThreshold = now - (24L * 60 * 60 * 1000 * tagRetentionDays);
-            } else {
-                this.acceptableTagDateTimeThreshold = 0;
-            }
+            acceptableDateTimeThreshold = now - (24L * 60 * 60 * 1000 * retentionDays);
         }
 
-        public long getAcceptableBranchDateTimeThreshold() {
-            return acceptableBranchDateTimeThreshold;
-        }
-
-        public long getAcceptablePRDateTimeThreshold() {
-            return acceptablePRDateTimeThreshold;
-        }
-
-        public long getAcceptableTagDateTimeThreshold() {
-            return acceptableTagDateTimeThreshold;
-        }
-
-        public String getBranchExcludePattern() {
-            return branchExcludePattern;
+        public long getAcceptableDateTimeThreshold() {
+            return acceptableDateTimeThreshold;
         }
 
         @Override
         public abstract boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
-          throws IOException;
+                throws IOException, InterruptedException;
     }
 }

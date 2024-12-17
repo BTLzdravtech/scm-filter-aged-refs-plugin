@@ -5,12 +5,9 @@
     <projectPath>group/subgroup/jenkins-plugin</projectPath>
     <credentialsId>foo</credentialsId>
     <traits>
-        <org.jenkinsci.plugins.scm_filter.GitLabAgedRefsTrait plugin="gitlab-scm-filter-aged-refs@${project.version}">
-            <branchRetentionDays>0</branchRetentionDays>
-            <prRetentionDays>0</prRetentionDays>
-            <tagRetentionDays>0</tagRetentionDays>
-            <branchExcludeFilter></branchExcludeFilter>
-        </org.jenkinsci.plugins.scm_filter.GitLabAgedRefsTrait>
+        <org.jenkinsci.plugins.scm__filter.GitLabAgedBranchesTrait plugin="gitlab-scm-filter-aged-refs@999999-SNAPSHOT">
+            <retentionDays>30</retentionDays>
+        </org.jenkinsci.plugins.scm__filter.GitLabAgedBranchesTrait>
     </traits>
     <sshRemote>git@gitlab.com:group/subgroup/jenkins-plugin.git</sshRemote>
     <httpRemote>https://gitlab.com/group/subgroup/jenkins-plugin.git</httpRemote>

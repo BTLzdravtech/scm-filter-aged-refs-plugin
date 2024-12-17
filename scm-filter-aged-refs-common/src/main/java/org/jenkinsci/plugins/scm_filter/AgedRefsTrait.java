@@ -10,9 +10,11 @@ import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.api.trait.SCMSourceTraitDescriptor;
+import org.jenkinsci.plugins.scm_filter.utils.FormValidationUtils;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 public abstract class AgedRefsTrait extends SCMSourceTrait {
 
@@ -73,52 +75,9 @@ public abstract class AgedRefsTrait extends SCMSourceTrait {
         }
 
         @Restricted(NoExternalUse.class)
-        public FormValidation doCheckRetentionDays(
-                @QueryParameter String branchRetentionDays,
-                @QueryParameter String prRetentionDays,
-                @QueryParameter String tagRetentionDays) {
-            FormValidation formValidation = FormValidation.ok();
-
-            try {
-                if (branchRetentionDays == null || branchRetentionDays.isBlank()) {
-                    formValidation = FormValidation.error("Branch retention days are not a number");
-                } else {
-                    int val = Integer.parseInt(branchRetentionDays);
-                    if (val < 0) {
-                        formValidation = FormValidation.error("Branch retention days are not a positive number");
-                    }
-                }
-            } catch (NumberFormatException e) {
-                formValidation = FormValidation.error("Branch retention days are not a number");
-            }
-
-            try {
-                if (prRetentionDays == null || branchRetentionDays.isBlank()) {
-                    formValidation = FormValidation.error("PR retention days are not a number");
-                } else {
-                    int val = Integer.parseInt(prRetentionDays);
-                    if (val < 0) {
-                        formValidation = FormValidation.error("PR retention days are not a positive number");
-                    }
-                }
-            } catch (NumberFormatException e) {
-                formValidation = FormValidation.error("PR retention days are not a number");
-            }
-
-            try {
-                if (tagRetentionDays == null || tagRetentionDays.isBlank()) {
-                    formValidation = FormValidation.error("Tag retention days are not a number");
-                } else {
-                    int val = Integer.parseInt(tagRetentionDays);
-                    if (val < 0) {
-                        formValidation = FormValidation.error("Tag retention days are not a positive number");
-                    }
-                }
-            } catch (NumberFormatException e) {
-                formValidation = FormValidation.error("Tag retention days are not a number");
-            }
-
-            return formValidation;
+        @POST
+        public FormValidation doCheckRetentionDays(@QueryParameter String value) {
+            return FormValidationUtils.checkRetentionDays(value);
         }
     }
 

@@ -1,34 +1,50 @@
 # Branch source Aged Refs
 
+[![GitHub release](https://img.shields.io/github/v/release/jenkinsci/scm-filter-aged-refs-plugin)](https://github.com/jenkinsci/scm-filter-aged-refs-plugin/releases/latest)
+[![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins%2Fscm-filter-aged-refs-plugin%2Fmain)](https://ci.jenkins.io/job/Plugins/job/scm-filter-aged-refs-plugin/job/main/)
+[![GitHub license](https://img.shields.io/github/license/jenkinsci/scm-filter-aged-refs-plugin)](https://github.com/jenkinsci/scm-filter-aged-refs-plugin/blob/main/LICENSE)
+[![Maintenance](https://img.shields.io/maintenance/yes/2024)]()
+
 This is a collection of extensions for several branch source Jenkins plugins.
 
 It provides filters for
 
-- [Bitbucket]: Filtering references (branches, tags and pull requests)
-- [GitHub]: Filtering references (branches, tags and pull requests)
-- [GitLab]: Filtering references (branches, tags and pull requests)
+- [Bitbucket]: ![BitBucket Plugin installs](https://img.shields.io/jenkins/plugin/i/bitbucket-scm-filter-aged-refs?color=blue)
+  Filtering references (branches, tags and pull requests)
+- [GitHub]: ![GitHub Plugin installs](https://img.shields.io/jenkins/plugin/i/github-scm-filter-aged-refs?color=blue)
+  Filtering references (branches, tags and pull requests)
+- [GitLab]: ![GitLab Plugin installs](https://img.shields.io/jenkins/plugin/i/gitlab-scm-filter-aged-refs?color=blue)
+  Filtering references (branches, tags and pull requests)
 
-This filter will ignore references (branches and pull requests) where its last
+This filter will ignore references (branches, tags and/or pull requests) where its last
 commit creation date is older than the defined threshold (in days). Ignored
 references won't be added as sources or will be disabled and tagged for
 deletion on the next full repository scan.
 
 [Bitbucket]: https://plugins.jenkins.io/cloudbees-bitbucket-branch-source/
+
 [GitHub]: https://plugins.jenkins.io/github-branch-source/
 [GitLab]: https://plugins.jenkins.io/gitlab-branch-source/
 
 ## Usage
 
-When defining a new job (or Organization folder), include an additional
-behaviour (placed under the additional separator). 
+There are four different behaviours available:
 
-![](.github/images/dropdown.png)
+- **Filter by ref age**: Applies the days filter to branches, tags and pull requests.
+- **Filter branches by age**: Applies the days filter only to branches.
+- **Filter pull requests by age**: Applies the days filter only to pull requests.
+- **Filter tags by age**: Applies the days filter only to tags.
 
-This behaviour is configurable, being mandatory to specify the
+![Dropdown Screenshot](.github/images/dropdown.png)
+
+When defining a new job (or Organization folder), include any of the behaviours. They are placed under the additional
+separator.
+
+All behaviour are configurable, being mandatory to specify the
 acceptable threshold (positive days) for each reference:
 
-![](.github/images/config.png)
+![Config Screenshot](.github/images/config.png)
 
 In case of an invalid positive threshold, the form won't validate:
 
-![](.github/images/config-invalid.png)
+![Error Screenshot](.github/images/config-invalid.png)

@@ -6,8 +6,6 @@ import com.cloudbees.jenkins.plugins.bitbucket.BitbucketSCMSourceRequest;
 import com.cloudbees.jenkins.plugins.bitbucket.BitbucketTagSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.BranchSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
-import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import java.io.IOException;
@@ -17,6 +15,7 @@ import jenkins.scm.api.trait.SCMSourceContext;
 import jenkins.scm.api.trait.SCMSourceRequest;
 import jenkins.scm.impl.trait.Selection;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.scm_filter.utils.BitbucketFilterRefUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class BitbucketAgedRefsTrait extends AgedRefsTrait {
@@ -77,28 +76,18 @@ public class BitbucketAgedRefsTrait extends AgedRefsTrait {
         public boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
                 throws IOException {
             if (scmHead instanceof BranchSCMHead) {
-                if (scmHead.getName().matches(super.getBranchExcludePattern())) {
-                    return false;
-                }
-
-                Iterable<BitbucketBranch> branches = ((BitbucketSCMSourceRequest) scmSourceRequest).getBranches();
-                for (BitbucketBranch branch : branches) {
-                    if (branch.getName().equals(scmHead.getName())) {
-                        long branchTS = branch.getDateMillis();
-                        return branchTS < super.getAcceptableBranchDateTimeThreshold();
-                    }
-                }
+                return BitbucketFilterRefUtils.isBranchExcluded(
+                        (BitbucketSCMSourceRequest) scmSourceRequest,
+                        (BranchSCMHead) scmHead,
+                        getAcceptableDateTimeThreshold());
             } else if (scmHead instanceof PullRequestSCMHead) {
-                Iterable<BitbucketPullRequest> pulls = ((BitbucketSCMSourceRequest) scmSourceRequest).getPullRequests();
-                for (BitbucketPullRequest pull : pulls) {
-                    if (pull.getSource().getBranch().getName().equals(scmHead.getName())) {
-                        long pullTS = pull.getSource().getCommit().getDateMillis();
-                        return pullTS < super.getAcceptablePRDateTimeThreshold();
-                    }
-                }
+                return BitbucketFilterRefUtils.isPullRequestExcluded(
+                        (BitbucketSCMSourceRequest) scmSourceRequest,
+                        (PullRequestSCMHead) scmHead,
+                        getAcceptableDateTimeThreshold());
             } else if (scmHead instanceof BitbucketTagSCMHead) {
-                long tagTS = ((BitbucketTagSCMHead) scmHead).getTimestamp();
-                return tagTS < super.getAcceptableTagDateTimeThreshold();
+                return BitbucketFilterRefUtils.isTagExcluded(
+                        (BitbucketTagSCMHead) scmHead, getAcceptableDateTimeThreshold());
             }
             return false;
         }

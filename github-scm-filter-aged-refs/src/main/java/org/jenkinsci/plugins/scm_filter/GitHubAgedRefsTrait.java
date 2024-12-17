@@ -15,8 +15,7 @@ import org.jenkinsci.plugins.github_branch_source.GitHubSCMSourceContext;
 import org.jenkinsci.plugins.github_branch_source.GitHubSCMSourceRequest;
 import org.jenkinsci.plugins.github_branch_source.GitHubTagSCMHead;
 import org.jenkinsci.plugins.github_branch_source.PullRequestSCMHead;
-import org.kohsuke.github.GHBranch;
-import org.kohsuke.github.GHPullRequest;
+import org.jenkinsci.plugins.scm_filter.utils.GitHubFilterRefUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class GitHubAgedRefsTrait extends AgedRefsTrait {
@@ -74,35 +73,17 @@ public class GitHubAgedRefsTrait extends AgedRefsTrait {
         public boolean isExcluded(@NonNull SCMSourceRequest scmSourceRequest, @NonNull SCMHead scmHead)
                 throws IOException {
             if (scmHead instanceof BranchSCMHead) {
-                if (scmHead.getName().matches(super.getBranchExcludePattern())) {
-                    return false;
-                }
-
-                Iterable<GHBranch> branches = ((GitHubSCMSourceRequest) scmSourceRequest).getBranches();
-                for (GHBranch branch : branches) {
-                    if (branch.getName().equals(scmHead.getName())) {
-                        long branchTS = branch.getOwner()
-                                .getCommit(branch.getSHA1())
-                                .getCommitDate()
-                                .getTime();
-                        return branchTS < super.getAcceptableBranchDateTimeThreshold();
-                    }
-                }
+                return GitHubFilterRefUtils.isBranchExcluded(
+                        (GitHubSCMSourceRequest) scmSourceRequest,
+                        (BranchSCMHead) scmHead,
+                        getAcceptableDateTimeThreshold());
             } else if (scmHead instanceof PullRequestSCMHead) {
-                Iterable<GHPullRequest> pulls = ((GitHubSCMSourceRequest) scmSourceRequest).getPullRequests();
-                for (GHPullRequest pull : pulls) {
-                    if (("PR-" + pull.getNumber()).equals(scmHead.getName())) {
-                        long pullTS = pull.getHead()
-                                .getCommit()
-                                .getCommitShortInfo()
-                                .getCommitDate()
-                                .getTime();
-                        return pullTS < super.getAcceptablePRDateTimeThreshold();
-                    }
-                }
+                return GitHubFilterRefUtils.isPullRequestExcluded(
+                        (GitHubSCMSourceRequest) scmSourceRequest,
+                        (PullRequestSCMHead) scmHead,
+                        getAcceptableDateTimeThreshold());
             } else if (scmHead instanceof GitHubTagSCMHead) {
-                long tagTS = ((GitHubTagSCMHead) scmHead).getTimestamp();
-                return tagTS < super.getAcceptableTagDateTimeThreshold();
+                return GitHubFilterRefUtils.isTagExcluded((GitHubTagSCMHead) scmHead, getAcceptableDateTimeThreshold());
             }
             return false;
         }

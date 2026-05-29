@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.87</version>
+    <version>6.2153.vcf31911d10c4</version>
   </parent>
 
   <artifactId>scm-filter-aged-refs-parent</artifactId>
@@ -50,9 +50,10 @@
   </scm>
 
   <properties>
-    <changelist>999999-SNAPSHOT</changelist>
+    <changelist>59.vc6b_39c26988c-BTL</changelist>
     <gitHubRepo>jenkinsci/scm-filter-aged-refs-plugin</gitHubRepo>
-    <jenkins.version>2.426.3</jenkins.version>
+    <jenkins.baseline>2.541</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <spotless.check.skip>false</spotless.check.skip>
   </properties>
 
@@ -60,8 +61,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.426.x</artifactId>
-        <version>3143.v347db_7c6db_6e</version>
+        <artifactId>bom-${jenkins.baseline}.x</artifactId>
+        <version>6269.v7a_159d68a_366</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -76,7 +77,7 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.26.3</version>
+      <version>3.27.7</version>
       <scope>test</scope>
     </dependency>
     <dependency>

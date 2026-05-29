@@ -7,12 +7,13 @@ import com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketBranch;
 import com.cloudbees.jenkins.plugins.bitbucket.api.BitbucketPullRequest;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.io.IOException;
 
 public final class BitbucketFilterRefUtils {
     public static boolean isBranchExcluded(
             @NonNull BitbucketSCMSourceRequest scmSourceRequest,
             @NonNull BranchSCMHead scmHead,
-            long acceptableDateTimeThreshold) {
+            long acceptableDateTimeThreshold) throws IOException, InterruptedException {
         Iterable<BitbucketBranch> branches = scmSourceRequest.getBranches();
         for (BitbucketBranch branch : branches) {
             long branchTS = branch.getDateMillis();
@@ -26,7 +27,7 @@ public final class BitbucketFilterRefUtils {
     public static boolean isPullRequestExcluded(
             @NonNull BitbucketSCMSourceRequest scmSourceRequest,
             @NonNull PullRequestSCMHead scmHead,
-            long acceptableDateTimeThreshold) {
+            long acceptableDateTimeThreshold) throws IOException, InterruptedException {
         Iterable<BitbucketPullRequest> pulls = scmSourceRequest.getPullRequests();
         for (BitbucketPullRequest pull : pulls) {
             if (pull.getSource().getBranch().getName().equals(scmHead.getName())) {
